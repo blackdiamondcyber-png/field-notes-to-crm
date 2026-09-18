@@ -43,7 +43,7 @@ Given one note and the date it was dictated (`noted_at`), the model calls a sing
 - **120 templated records.** Generated from templates with varied phrasing, filler words, occasional typos, mixed activity types, relative dates, and sometimes no next action at all. Because the label for each of these records is built from the exact same template parameters that produced the note text (the office name, activity type, products, and resolved date all come from one function call), the labels are **exact by construction** - there is no model, and no human transcription step, between the parameters and the label. The only shared logic between note generation and labeling is `src/lib/dates.ts`, which is unit tested on its own.
 - **30 hand-written hard cases**, authored directly in `scripts/make-dataset.ts` as literal note/label pairs: two offices in one note, a cancelled visit, a pure phone-tag note, a product mentioned but never actually discussed, a sarcastic note, a signed quote with no follow-up, and several dates that cross month or year boundaries. These are exact by construction too, in the more direct sense that I wrote both the note and its label by hand at the same time.
 
-Office and contact names are fictional. The word "Patterson" never appears.
+Office and contact names are fictional.
 
 ## Prompts
 

@@ -82,15 +82,34 @@ const CONTACTS = [
 ];
 
 const PRODUCTS = [
-  "the SmileClear aligner kit",
-  "the QuickScan intraoral camera",
-  "the ProSeal sealant system",
-  "the BrightCure curing light",
-  "the FlexRail chair upgrade",
-  "the ComfortBite impression trays",
-  "the SteriFlow sterilizer",
-  "the ChartWise software bundle",
+  "SmileClear aligner kit",
+  "QuickScan intraoral camera",
+  "ProSeal sealant system",
+  "BrightCure curing light",
+  "FlexRail chair upgrade",
+  "ComfortBite impression trays",
+  "SteriFlow sterilizer",
+  "ChartWise software bundle",
 ];
+
+// How a rep opens a note for each kind of interaction, so the note and the
+// label agree about what actually happened.
+const OPENERS: Record<ActivityType, string[]> = {
+  call: ["called", "got on the phone with", "quick call to"],
+  email: ["emailed", "sent an email over to", "replied to the thread at"],
+  visit: ["stopped by", "swung by", "was out at"],
+  note: ["note on", "just jotting this down about", "reminder about"],
+  demo: ["did a demo at", "ran the demo over at", "demoed for"],
+  quote: ["put a quote together for", "sent the quote over to", "quoted"],
+};
+const OUTCOME_SUBJECT: Record<ActivityType, string> = {
+  call: "Call",
+  email: "Email",
+  visit: "Visit",
+  note: "Note",
+  demo: "Demo",
+  quote: "Quote",
+};
 
 const OUTCOMES: Record<ActivityType, string[]> = {
   call: [
@@ -198,15 +217,22 @@ function buildTemplateRecord(notedAt: string): GeneratedNote {
       "send the contract",
       "check back in",
     ]);
-    nextAction = `${actionVerb} by ${datePhrase}`;
-    nextActionPhrase = ` I need to ${actionVerb} ${datePhrase}.`;
+    const joiner = /^in /.test(datePhrase) && / in$/.test(actionVerb)
+      ? " "
+      : /^(in |next |tomorrow|end of)/.test(datePhrase)
+        ? " "
+        : " by ";
+    nextAction = /^in /.test(datePhrase) && / in$/.test(actionVerb)
+      ? `${actionVerb.replace(/ in$/, "")} ${datePhrase}`
+      : `${actionVerb}${joiner}${datePhrase}`;
+    nextActionPhrase = ` I need to ${nextAction}.`;
   }
 
   const contactsPhrase = contacts.join(" and ");
   const productPhrase =
-    products.length > 0 ? ` We talked about ${products[0]}.` : "";
+    products.length > 0 ? ` We talked about the ${products[0]}.` : "";
   let noteBody =
-    `${filler ? filler + ", " : ""}stopped by ${office}, talked to ${contactsPhrase}. Visit ${outcome}.${productPhrase}${nextActionPhrase}`.trim();
+    `${filler ? filler + ", " : ""}${pick(OPENERS[activityType])} ${office}, talked to ${contactsPhrase}. ${OUTCOME_SUBJECT[activityType]} ${outcome}.${productPhrase}${nextActionPhrase}`.trim();
   noteBody = applyTypo(noteBody);
 
   const confidence =
@@ -217,7 +243,7 @@ function buildTemplateRecord(notedAt: string): GeneratedNote {
     activity_type: activityType,
     contacts,
     products_mentioned: products,
-    outcome: `Visit ${outcome}.`,
+    outcome: `${OUTCOME_SUBJECT[activityType]} ${outcome}.`,
     next_action: nextAction,
     next_action_date: nextActionDate,
     follow_up_needed: hasNextAction,
@@ -258,7 +284,7 @@ function handWrittenRecords(): NoteRecord[] {
         office_name: "Maplewood Family Dentistry",
         activity_type: "visit",
         contacts: ["Dr. Priya Nair"],
-        products_mentioned: ["the SmileClear aligner kit"],
+        products_mentioned: ["SmileClear aligner kit"],
         outcome:
           "Demoed the aligner kit at Maplewood; Riverbend visit was brief with no real interest.",
         next_action: "send quote by next friday",
@@ -344,8 +370,8 @@ function handWrittenRecords(): NoteRecord[] {
         activity_type: "quote",
         contacts: ["office manager Ruth"],
         products_mentioned: [
-          "the SteriFlow sterilizer",
-          "the ChartWise software bundle",
+          "SteriFlow sterilizer",
+          "ChartWise software bundle",
         ],
         outcome:
           "Sent a formal quote covering the sterilizer and software bundle; budget is tight this quarter.",
@@ -380,7 +406,7 @@ function handWrittenRecords(): NoteRecord[] {
         office_name: "Meadowview Smiles",
         activity_type: "demo",
         contacts: ["hygienist Talia"],
-        products_mentioned: ["the QuickScan intraoral camera"],
+        products_mentioned: ["QuickScan intraoral camera"],
         outcome:
           "Demo went well; the hygienist loved the scan speed and wants a pricing follow up.",
         next_action: "return to talk pricing on jan 3",
@@ -397,7 +423,7 @@ function handWrittenRecords(): NoteRecord[] {
         office_name: "Stonegate Dental Center",
         activity_type: "visit",
         contacts: ["Dr. Sophie Marsh"],
-        products_mentioned: ["the ProSeal sealant system"],
+        products_mentioned: ["ProSeal sealant system"],
         outcome:
           "Discussed the sealant system; the doctor wants to revisit once a new hygienist starts.",
         next_action: "revisit end of next month",
@@ -451,7 +477,7 @@ function handWrittenRecords(): NoteRecord[] {
         office_name: "Brookfield Dental Arts",
         activity_type: "visit",
         contacts: ["Dr. Marcus Webb"],
-        products_mentioned: ["the FlexRail chair upgrade"],
+        products_mentioned: ["FlexRail chair upgrade"],
         outcome: "The doctor signed off on last week's chair upgrade quote.",
         next_action: null,
         next_action_date: null,
@@ -467,7 +493,7 @@ function handWrittenRecords(): NoteRecord[] {
         office_name: "Ashford Dental Group",
         activity_type: "visit",
         contacts: ["Dr. Grace Kim", "hygienist Ben"],
-        products_mentioned: ["the ComfortBite impression trays"],
+        products_mentioned: ["ComfortBite impression trays"],
         outcome:
           "They requested a sample pack of the impression trays with no rush on timing.",
         next_action: "send sample pack",
@@ -500,7 +526,7 @@ function handWrittenRecords(): NoteRecord[] {
         office_name: "Copper Creek Dental",
         activity_type: "quote",
         contacts: ["Dr. Owen Blake"],
-        products_mentioned: ["the BrightCure curing light"],
+        products_mentioned: ["BrightCure curing light"],
         outcome:
           "Preparing a formal quote for the curing light only, per the doctor's request to keep it simple.",
         next_action: "send formal quote",
@@ -534,7 +560,7 @@ function handWrittenRecords(): NoteRecord[] {
         office_name: "Silver Birch Dental",
         activity_type: "demo",
         contacts: ["Dr. Alan Foster", "office manager Ruth"],
-        products_mentioned: ["the ChartWise software bundle"],
+        products_mentioned: ["ChartWise software bundle"],
         outcome:
           "Long demo of the software bundle that went well; they want to reconnect soon.",
         next_action: "reconnect in 2 weeks",
@@ -584,7 +610,7 @@ function handWrittenRecords(): NoteRecord[] {
         office_name: "Maplewood Family Dentistry",
         activity_type: "call",
         contacts: ["Dr. Priya Nair"],
-        products_mentioned: ["the SmileClear aligner kit"],
+        products_mentioned: ["SmileClear aligner kit"],
         outcome:
           "The doctor confirmed the aligner order and wants delivery scheduled.",
         next_action: "schedule delivery for end of month",
@@ -601,7 +627,7 @@ function handWrittenRecords(): NoteRecord[] {
         office_name: "Riverbend Family Dental",
         activity_type: "visit",
         contacts: ["front desk lead Carla"],
-        products_mentioned: ["the ProSeal sealant system"],
+        products_mentioned: ["ProSeal sealant system"],
         outcome:
           "Dropped off sealant samples; no decision-maker was available to discuss products.",
         next_action: null,
@@ -618,7 +644,7 @@ function handWrittenRecords(): NoteRecord[] {
         office_name: "Harborview Dental Group",
         activity_type: "email",
         contacts: ["Dr. Marcus Webb"],
-        products_mentioned: ["the QuickScan intraoral camera"],
+        products_mentioned: ["QuickScan intraoral camera"],
         outcome: "Sent a recap with the camera spec sheet attached.",
         next_action: "follow up if no response by next tues",
         next_action_date: resolveRelativeDate("next tues", "2026-09-09"),
@@ -634,7 +660,7 @@ function handWrittenRecords(): NoteRecord[] {
         office_name: "Northgate Dental Associates",
         activity_type: "quote",
         contacts: ["office manager Denise"],
-        products_mentioned: ["the FlexRail chair upgrade"],
+        products_mentioned: ["FlexRail chair upgrade"],
         outcome:
           "Preparing per-unit pricing for the chair upgrade instead of a bundle.",
         next_action: "send per-chair quote",
@@ -668,7 +694,7 @@ function handWrittenRecords(): NoteRecord[] {
         office_name: "Summit Ridge Orthodontics",
         activity_type: "visit",
         contacts: ["Dr. Owen Blake", "Dr. Sophie Marsh"],
-        products_mentioned: ["the SteriFlow sterilizer"],
+        products_mentioned: ["SteriFlow sterilizer"],
         outcome:
           "Both doctors are interested in the sterilizer and want a joint quote covering both locations.",
         next_action: "prepare joint quote for both locations",
@@ -702,7 +728,7 @@ function handWrittenRecords(): NoteRecord[] {
         office_name: "Pinecrest Dental Partners",
         activity_type: "call",
         contacts: ["Dr. Grace Kim"],
-        products_mentioned: ["the ChartWise software bundle"],
+        products_mentioned: ["ChartWise software bundle"],
         outcome:
           "Discussed the software bundle's features at length but pricing did not come up.",
         next_action: null,
@@ -720,8 +746,8 @@ function handWrittenRecords(): NoteRecord[] {
         activity_type: "quote",
         contacts: ["Dr. Sophie Marsh"],
         products_mentioned: [
-          "the BrightCure curing light",
-          "the ComfortBite impression trays",
+          "BrightCure curing light",
+          "ComfortBite impression trays",
         ],
         outcome:
           "The doctor signed the quote covering both the curing light and impression trays.",
