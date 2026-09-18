@@ -1,5 +1,7 @@
 # field-notes-to-crm
 
+[![CI](https://github.com/blackdiamondcyber-png/field-notes-to-crm/actions/workflows/ci.yml/badge.svg)](https://github.com/blackdiamondcyber-png/field-notes-to-crm/actions/workflows/ci.yml)
+
 I am a dental equipment sales rep and I dictate my visit notes on my phone between stops. They come out messy: filler words, typos, relative dates like "next Tues" or "end of month," sometimes two offices in one note, sometimes just a phone tag with nobody home. I built the CRM I use myself, and the piece I kept getting wrong by hand was turning that messy dictation into a clean activity row. This project is that extraction step, plus an eval harness so I can change the prompt and actually measure whether it got better instead of guessing.
 
 ## The table
