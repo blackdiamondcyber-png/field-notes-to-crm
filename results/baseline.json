@@ -1,0 +1,68 @@
+{
+  "promptVersion": "v2",
+  "recordCount": 150,
+  "activityTypeAccuracy": 0.8533333333333334,
+  "perClassActivityType": [
+    {
+      "activityType": "call",
+      "precision": 0.8378378378378378,
+      "recall": 1,
+      "f1": 0.911764705882353,
+      "support": 31
+    },
+    {
+      "activityType": "email",
+      "precision": 1,
+      "recall": 0.6666666666666666,
+      "f1": 0.8,
+      "support": 24
+    },
+    {
+      "activityType": "visit",
+      "precision": 1,
+      "recall": 0.5769230769230769,
+      "f1": 0.7317073170731707,
+      "support": 26
+    },
+    {
+      "activityType": "note",
+      "precision": 0.9642857142857143,
+      "recall": 0.9310344827586207,
+      "f1": 0.9473684210526316,
+      "support": 29
+    },
+    {
+      "activityType": "demo",
+      "precision": 0.7272727272727273,
+      "recall": 0.9411764705882353,
+      "f1": 0.8205128205128205,
+      "support": 17
+    },
+    {
+      "activityType": "quote",
+      "precision": 0.71875,
+      "recall": 1,
+      "f1": 0.8363636363636363,
+      "support": 23
+    }
+  ],
+  "nextActionDateExactMatchRate": 0.9,
+  "nextActionNullHandlingAccuracy": 0.88,
+  "productsMentioned": {
+    "precision": 0.8833333333333333,
+    "recall": 0.8933333333333333,
+    "f1": 0.8866666666666667
+  },
+  "contacts": {
+    "precision": 0.9966666666666667,
+    "recall": 0.9966666666666667,
+    "f1": 0.9966666666666667
+  },
+  "officeNameAccuracy": 1,
+  "hallucinationRate": 0.12,
+  "meanLatencyMs": 3330.605184000001,
+  "totalInputTokens": 279027,
+  "totalOutputTokens": 47750,
+  "estimatedCostUsd": 1.035554,
+  "failures": []
+}

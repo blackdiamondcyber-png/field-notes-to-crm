@@ -94,6 +94,12 @@ function setPrecisionRecallF1(
 ): PrecisionRecallF1 {
   const predSet = new Set(predicted.map(normalizeSetItem));
   const labelSet = new Set(label.map(normalizeSetItem));
+  // Both empty is a correct answer, not a miss. Scoring it 0 punished every note
+  // that legitimately mentions no product, which pinned this metric near 0.5 for
+  // any prompt and hid real differences between them.
+  if (predSet.size === 0 && labelSet.size === 0) {
+    return { precision: 1, recall: 1, f1: 1 };
+  }
   let tp = 0;
   for (const item of predSet) {
     if (labelSet.has(item)) tp += 1;

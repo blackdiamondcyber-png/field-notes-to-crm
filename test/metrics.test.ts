@@ -168,3 +168,25 @@ describe("hallucinationRate", () => {
     expect(hallucinationRate(pairs)).toBe(0.5);
   });
 });
+
+describe("empty set handling", () => {
+  it("scores an empty prediction against an empty label as perfect", () => {
+    const pairs = [
+      {
+        predicted: activity({ products_mentioned: [] }),
+        label: activity({ products_mentioned: [] }),
+      },
+    ];
+    expect(averageSetMetrics(pairs, "products_mentioned").f1).toBe(1);
+  });
+
+  it("still scores a hallucinated item against an empty label as zero", () => {
+    const pairs = [
+      {
+        predicted: activity({ products_mentioned: ["SteriFlow sterilizer"] }),
+        label: activity({ products_mentioned: [] }),
+      },
+    ];
+    expect(averageSetMetrics(pairs, "products_mentioned").f1).toBe(0);
+  });
+});

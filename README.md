@@ -73,23 +73,27 @@ pnpm eval --promote   # copies the current run to results/baseline.json
 
 ## Results
 
-_Placeholder - fill in after running `pnpm eval --prompt v1` and `pnpm eval --prompt v2` with a real API key. `pnpm eval` writes this exact table to `results/report.md`; paste it here once both runs exist._
+Both runs are 150 notes through `claude-sonnet-5`, tool use with a strict schema, on the dataset in this repo. No records failed.
 
-| Metric                             | v1  | v2  |
-| ---------------------------------- | --- | --- |
-| Activity type accuracy             | TBD | TBD |
-| next_action_date exact match       | TBD | TBD |
-| next_action null-handling accuracy | TBD | TBD |
-| products_mentioned F1              | TBD | TBD |
-| contacts F1                        | TBD | TBD |
-| office_name exact match            | TBD | TBD |
-| Hallucination rate                 | TBD | TBD |
-| Mean latency                       | TBD | TBD |
-| Estimated cost                     | TBD | TBD |
+| Metric | v1, naive prompt | v2, explicit rules |
+| --- | ---: | ---: |
+| Activity type accuracy | 94.0% | 85.3% |
+| next_action_date exact match | 90.7% | 90.0% |
+| next_action null handling | 81.3% | 88.0% |
+| products_mentioned F1 | 83.3% | 88.7% |
+| contacts F1 | 63.3% | 99.7% |
+| office_name exact match | 100.0% | 100.0% |
+| Hallucination rate (lower is better) | 19.3% | 12.0% |
+| Mean latency | 3621 ms | 3331 ms |
+| Estimated cost for the run | $0.77 | $1.04 |
 
-## What the eval caught between v1 and v2
+## What the eval caught
 
-_Placeholder - fill in after the first real run. Expect this section to name specific failure modes v1 hit on the hard cases (e.g. picking the wrong activity_type on a visit-plus-demo note, hallucinating a next_action_date from "after the holiday," or inventing a product that was only mentioned in passing) and confirm whether v2's explicit rules actually fixed them._
+**A bug in the eval itself, before it caught anything about the prompt.** The first run scored products_mentioned at 50.7% and 50.0%, which was suspiciously flat across two very different prompts. Comparing the cached predictions to the labels by hand showed zero mismatches on that field. The set metric was scoring an empty prediction against an empty label as zero instead of as a correct answer, and about 40% of the notes mention no product at all. Fixed in `src/lib/metrics.ts` with two tests. The corrected numbers are the ones in the table, and they are 30 points higher for both prompts. A metric that cannot tell two prompts apart is worth more suspicion than a metric that says something you dislike.
+
+**v2's contact rule worked.** Writing down that a contact is "role plus name" when the note gives one, and that nothing may be invented, took contacts F1 from 63.3% to 99.7% and cut the hallucination rate from 19.3% to 12.0%.
+
+**v2's activity type rule backfired.** Accuracy dropped from 94.0% to 85.3%: 15 notes got worse, 2 got better. Eight of the fifteen were emails that mentioned an attached quote, and the precedence line "quote > demo > visit > call > email > note" pushed the model to label them `quote`. The precedence rule was written for notes where two things genuinely happened, and it is being applied to the subject of a sentence instead. The rule needs to say that activity_type is the medium of the interaction, and that a quote only wins when the quote itself was the interaction. That is a v3, and the harness is what makes it a measurable change rather than an argument.
 
 ## What this is not
 
