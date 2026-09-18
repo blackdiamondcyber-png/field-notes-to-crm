@@ -1,0 +1,28 @@
+{
+  "name": "field-notes-to-crm",
+  "version": "0.1.0",
+  "description": "Turn messy dictated field-sales notes into structured CRM activity rows, with an eval harness to compare prompt versions.",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "lint": "eslint . --ext .ts",
+    "test": "vitest run",
+    "make-dataset": "tsx scripts/make-dataset.ts",
+    "extract": "tsx src/cli.ts",
+    "eval": "tsx src/eval.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.126.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@typescript-eslint/eslint-plugin": "^8.18.0",
+    "@typescript-eslint/parser": "^8.18.0",
+    "eslint": "^9.17.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "packageManager": "pnpm@10.30.3"
+}

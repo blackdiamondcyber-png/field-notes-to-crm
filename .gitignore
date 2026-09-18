@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.cache/
+results/*.json
+!results/baseline.json
+.env
+.env.*
+*.log
