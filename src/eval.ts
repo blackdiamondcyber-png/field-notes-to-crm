@@ -5,46 +5,15 @@ import {
   readFileSync,
   writeFileSync,
 } from "node:fs";
-import {
-  extractActivity,
-  PRICE_PER_MILLION_INPUT,
-  PRICE_PER_MILLION_OUTPUT,
-  type PromptVersion,
-} from "./extract.js";
+import { pathToFileURL } from "node:url";
+import { extractActivity, type PromptVersion } from "./extract.js";
 import { mapWithConcurrency } from "./lib/concurrency.js";
-import {
-  activityTypeAccuracy,
-  averageSetMetrics,
-  hallucinationRate,
-  nextActionDateExactMatchRate,
-  nextActionNullHandlingAccuracy,
-  officeNameAccuracy,
-  perClassActivityTypeMetrics,
-  type Pair,
-} from "./lib/metrics.js";
+import { summarize, type EvalSummary, type UsageRow } from "./summarize.js";
 import type { NoteRecord } from "./types.js";
 
 const CONCURRENCY = 4;
 
-interface EvalSummary {
-  promptVersion: PromptVersion;
-  recordCount: number;
-  activityTypeAccuracy: number;
-  perClassActivityType: ReturnType<typeof perClassActivityTypeMetrics>;
-  nextActionDateExactMatchRate: number;
-  nextActionNullHandlingAccuracy: number;
-  productsMentioned: ReturnType<typeof averageSetMetrics>;
-  contacts: ReturnType<typeof averageSetMetrics>;
-  officeNameAccuracy: number;
-  hallucinationRate: number;
-  meanLatencyMs: number;
-  totalInputTokens: number;
-  totalOutputTokens: number;
-  estimatedCostUsd: number;
-  failures: string[];
-}
-
-function loadDataset(): NoteRecord[] {
+export function loadDataset(): NoteRecord[] {
   const raw = readFileSync("data/notes.jsonl", "utf8");
   return raw
     .split("\n")
@@ -79,52 +48,22 @@ async function runEval(promptVersion: PromptVersion): Promise<EvalSummary> {
   const successes = outcomes.filter(
     (o): o is NonNullable<typeof o> => o !== null,
   );
-  const pairs: Pair[] = successes.map((o) => ({
+  const rows: UsageRow[] = successes.map((o) => ({
     predicted: o.result.activity,
     label: o.record.label,
+    inputTokens: o.result.inputTokens,
+    outputTokens: o.result.outputTokens,
+    latencyMs: o.result.latencyMs,
   }));
 
-  const totalInputTokens = successes.reduce(
-    (sum, o) => sum + o.result.inputTokens,
-    0,
-  );
-  const totalOutputTokens = successes.reduce(
-    (sum, o) => sum + o.result.outputTokens,
-    0,
-  );
-  const meanLatencyMs =
-    successes.length === 0
-      ? 0
-      : successes.reduce((sum, o) => sum + o.result.latencyMs, 0) /
-        successes.length;
-  const estimatedCostUsd =
-    (totalInputTokens / 1_000_000) * PRICE_PER_MILLION_INPUT +
-    (totalOutputTokens / 1_000_000) * PRICE_PER_MILLION_OUTPUT;
-
-  return {
-    promptVersion,
-    recordCount: pairs.length,
-    activityTypeAccuracy: activityTypeAccuracy(pairs),
-    perClassActivityType: perClassActivityTypeMetrics(pairs),
-    nextActionDateExactMatchRate: nextActionDateExactMatchRate(pairs),
-    nextActionNullHandlingAccuracy: nextActionNullHandlingAccuracy(pairs),
-    productsMentioned: averageSetMetrics(pairs, "products_mentioned"),
-    contacts: averageSetMetrics(pairs, "contacts"),
-    officeNameAccuracy: officeNameAccuracy(pairs),
-    hallucinationRate: hallucinationRate(pairs),
-    meanLatencyMs,
-    totalInputTokens,
-    totalOutputTokens,
-    estimatedCostUsd,
-    failures,
-  };
+  return summarize(promptVersion, rows, failures);
 }
 
 function pct(n: number): string {
   return `${(n * 100).toFixed(1)}%`;
 }
 
-function summaryTable(summary: EvalSummary): string {
+export function summaryTable(summary: EvalSummary): string {
   const rows = [
     ["Activity type accuracy", pct(summary.activityTypeAccuracy)],
     ["next_action_date exact match", pct(summary.nextActionDateExactMatchRate)],
@@ -266,7 +205,15 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((error: unknown) => {
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exitCode = 1;
-});
+// Only run when eval.ts is the CLI entry point, not when score.ts imports
+// loadDataset/summaryTable from this module.
+const isCliEntry =
+  process.argv[1] !== undefined &&
+  import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isCliEntry) {
+  main().catch((error: unknown) => {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exitCode = 1;
+  });
+}

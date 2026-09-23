@@ -11,7 +11,8 @@
     "make-dataset": "tsx scripts/make-dataset.ts",
     "export-predictions": "tsx scripts/export-predictions.ts",
     "extract": "tsx src/cli.ts",
-    "eval": "tsx src/eval.ts"
+    "eval": "tsx src/eval.ts",
+    "score": "tsx src/score.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.126.0"
