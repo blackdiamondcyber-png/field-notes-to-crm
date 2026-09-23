@@ -89,6 +89,44 @@ Both runs are 150 notes through `claude-sonnet-5`, tool use with a strict schema
 | Mean latency                         |          3621 ms |            3331 ms |
 | Estimated cost for the run           |            $0.77 |              $1.04 |
 
+## Reproduce every number without an API key
+
+The 300 model outputs behind the table above are committed in `data/predictions/` (`v1.jsonl` and `v2.jsonl`), one line per note, exported straight from the same cache the eval reads. You do not need an API key to check the table:
+
+```bash
+pnpm score --prompt v1 --check
+pnpm score --prompt v2 --check
+
+cd python
+uv run python -m fieldnotes.score --prompt v1 --check
+uv run python -m fieldnotes.score --prompt v2 --check
+```
+
+Each command recomputes the whole table from the committed predictions and exits 1 if a single number differs from `results/v1.json` or `results/v2.json`. CI runs both the TypeScript and Python versions on every push (`pnpm test`, which includes `test/reproduce.test.ts`, and the `python` job in `.github/workflows/ci.yml`), so the published numbers are checked continuously instead of only when I remember to run them by hand. Only the `eval-gate` job that re-runs the model against the baseline needs `ANTHROPIC_API_KEY`.
+
+There are two implementations on purpose. `python/` is a second, independent scorer, written from `src/lib/metrics.ts` and `src/summarize.ts` field by field, that reproduces `results/v1.json` and `results/v2.json` bit for bit from the same committed predictions. That is the actual test: if the scoring rules were vague or under-specified anywhere, the two implementations would drift apart on at least one field. They do not.
+
+## Python
+
+A second, independent implementation of the scoring lives in `python/`, managed with [uv](https://docs.astral.sh/uv/). It has no dependency on the TypeScript code or its `node_modules`, and shares only the committed data files: `data/notes.jsonl`, `data/predictions/`, and `results/`.
+
+```bash
+cd python
+uv sync                        # pytest, ruff, mypy - no API dependency
+uv run ruff check
+uv run ruff format --check
+uv run mypy --strict src tests
+uv run pytest -q
+
+uv run python -m fieldnotes.score --prompt v2 --check   # same check as pnpm score, zero API calls
+
+# requires ANTHROPIC_API_KEY, as an env var or in .env.local at the repo root
+uv sync --extra live            # installs the anthropic SDK
+uv run python -m fieldnotes.eval --prompt v2 --limit 3
+```
+
+`fieldnotes.extract` sends the same request `src/extract.ts` does: same model, same tool schema, same cache key, so the two runners share one `.cache/` directory. `fieldnotes.eval` only ever writes `results/python-<v>.json`, which is gitignored; it never touches `results/v1.json`, `results/v2.json`, or `results/baseline.json`.
+
 ## What the eval caught
 
 **A bug in the eval itself, before it caught anything about the prompt.** The first run scored products_mentioned at 50.7% and 50.0%, which was suspiciously flat across two very different prompts. Comparing the cached predictions to the labels by hand showed zero mismatches on that field. The set metric was scoring an empty prediction against an empty label as zero instead of as a correct answer, and 62 of the 150 notes (41%) mention no product at all. Fixed in `src/lib/metrics.ts` with two tests. The corrected numbers are the ones in the table, and they are 30 points higher for both prompts. A metric that cannot tell two prompts apart is worth more suspicion than a metric that says something you dislike.
