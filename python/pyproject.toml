@@ -6,7 +6,7 @@ requires-python = ">=3.11"
 dependencies = []
 
 [project.optional-dependencies]
-live = ["anthropic>=0.70.0"]
+live = ["anthropic>=1.8.0"]
 
 [dependency-groups]
 dev = ["pytest>=8.3.0", "ruff>=0.7.0", "mypy>=1.13.0"]
