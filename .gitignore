@@ -3,6 +3,8 @@ dist/
 .cache/
 results/*.json
 !results/baseline.json
+!results/v1.json
+!results/v2.json
 .env
 .env.*
 *.log
