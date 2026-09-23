@@ -104,7 +104,7 @@ uv run python -m fieldnotes.score --prompt v1 --check
 uv run python -m fieldnotes.score --prompt v2 --check
 ```
 
-Each command recomputes the whole table from the committed predictions and exits 1 if a single number differs from `results/v1.json` or `results/v2.json`. CI runs both the TypeScript and Python versions on every push (`pnpm test`, which includes `test/reproduce.test.ts`, and the `python` job in `.github/workflows/ci.yml`), so the published numbers are checked continuously instead of only when I remember to run them by hand. Only the `eval-gate` job that re-runs the model against the baseline needs `ANTHROPIC_API_KEY`.
+Each command recomputes the whole table from the committed predictions and exits 1 if a single number differs from `results/v1.json` or `results/v2.json`. CI runs both the TypeScript and Python versions on every push (`pnpm test`, which includes `test/reproduce.test.ts`, and the `python` job in `.github/workflows/ci.yml`), so the published numbers are checked continuously instead of only when I remember to run them by hand. Only the `eval-gate` job that re-runs the model against the baseline needs `ANTHROPIC_API_KEY`, and this public repo has no such secret, so in CI that job is skipped with a notice saying so. The gate's comparison itself is unit-tested without a key in `test/gate.test.ts`, which is also how I found that a drop of exactly two points used to fail a gate documented as "more than two points" (0.94 - 0.92 is 0.020000000000000018 in floating point).
 
 There are two implementations on purpose. `python/` is a second, independent scorer, written from `src/lib/metrics.ts` and `src/summarize.ts` field by field, that reproduces `results/v1.json` and `results/v2.json` bit for bit from the same committed predictions. That is the actual test: if the scoring rules were vague or under-specified anywhere, the two implementations would drift apart on at least one field. They do not.
 
@@ -136,6 +136,8 @@ uv run python -m fieldnotes.eval --prompt v2 --limit 3
 **v2's contact rule worked.** Writing down that a contact is "role plus name" when the note gives one, and that nothing may be invented, took contacts F1 from 63.3% to 99.7% and cut the hallucination rate from 19.3% to 12.0%.
 
 **v2's activity type rule backfired.** Accuracy dropped from 94.0% to 85.3%: 15 notes got worse, 2 got better. Eight of the fifteen were emails that mentioned an attached quote, and the precedence line "quote > demo > visit > call > email > note" pushed the model to label them `quote`. The precedence rule was written for notes where two things genuinely happened, and it is being applied to the subject of a sentence instead. The rule needs to say that activity_type is the medium of the interaction, and that a quote only wins when the quote itself was the interaction. That is a v3, and the harness is what makes it a measurable change rather than an argument.
+
+**Neither version ships as is.** v1 hallucinates more (19.3% of notes against 12.0%), and v2 mislabels emails that mention a quote. The next step is that v3, measured against the same 150 notes, and it has not been built yet.
 
 ## What this is not
 

@@ -8,6 +8,7 @@ import {
 import { pathToFileURL } from "node:url";
 import { extractActivity, type PromptVersion } from "./extract.js";
 import { mapWithConcurrency } from "./lib/concurrency.js";
+import { checkGate } from "./lib/gate.js";
 import { summarize, type EvalSummary, type UsageRow } from "./summarize.js";
 import type { NoteRecord } from "./types.js";
 
@@ -121,15 +122,6 @@ function writeReport(current: EvalSummary, other: EvalSummary | null): void {
   writeFileSync("results/report.md", report, "utf8");
 }
 
-const HEADLINE_METRICS: Array<{ key: keyof EvalSummary; label: string }> = [
-  { key: "activityTypeAccuracy", label: "activity type accuracy" },
-  {
-    key: "nextActionDateExactMatchRate",
-    label: "next_action_date exact match",
-  },
-  { key: "officeNameAccuracy", label: "office_name exact match" },
-];
-
 function runGate(current: EvalSummary): boolean {
   if (!existsSync("results/baseline.json")) {
     console.error(
@@ -140,23 +132,13 @@ function runGate(current: EvalSummary): boolean {
   const baseline = JSON.parse(
     readFileSync("results/baseline.json", "utf8"),
   ) as EvalSummary;
-  let passed = true;
-  for (const { key, label } of HEADLINE_METRICS) {
-    const currentValue = current[key] as number;
-    const baselineValue = baseline[key] as number;
-    const drop = baselineValue - currentValue;
-    if (drop > 0.02) {
-      console.error(
-        `GATE FAIL: ${label} dropped ${pct(drop)} (baseline ${pct(baselineValue)} -> ${pct(currentValue)})`,
-      );
-      passed = false;
-    } else {
-      console.log(
-        `GATE OK: ${label} (baseline ${pct(baselineValue)} -> ${pct(currentValue)})`,
-      );
-    }
+  const checks = checkGate(baseline, current);
+  for (const c of checks) {
+    const line = `${c.label} (baseline ${pct(c.baseline)} -> ${pct(c.current)})`;
+    if (c.passed) console.log(`GATE OK: ${line}`);
+    else console.error(`GATE FAIL: ${c.label} dropped ${pct(c.drop)}, ${line}`);
   }
-  return passed;
+  return checks.every((c) => c.passed);
 }
 
 async function main(): Promise<void> {
