@@ -4,6 +4,8 @@
 
 I am a dental equipment sales rep and I dictate my visit notes on my phone between stops. They come out messy: filler words, typos, relative dates like "next Tues" or "end of month," sometimes two offices in one note, sometimes just a phone tag with nobody home. I built the CRM I use myself, and the piece I kept getting wrong by hand was turning that messy dictation into a clean activity row. This project is that extraction step, plus an eval harness so I can change the prompt and actually measure whether it got better instead of guessing.
 
+A two and a half minute walkthrough of the dataset, the results and the regression the harness caught is on YouTube: [building the eval before shipping the prompt](https://www.youtube.com/watch?v=46dHjUNHqIU).
+
 ## The table
 
 The target shape is the real table in my CRM:
@@ -142,3 +144,5 @@ This is a standalone evaluation harness for one extraction step, not the product
 ## License
 
 MIT, see [LICENSE](./LICENSE).
+
+More of my work: [erik-pearson-portfolio.vercel.app](https://erik-pearson-portfolio.vercel.app). Contact: [LinkedIn](https://www.linkedin.com/in/erikpearson2).
