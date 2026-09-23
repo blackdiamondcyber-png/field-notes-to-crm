@@ -12,7 +12,7 @@ export interface CachedResult {
   latencyMs: number;
 }
 
-function cacheKey(promptVersion: string, note: string): string {
+export function cacheKey(promptVersion: string, note: string): string {
   return createHash("sha256").update(`${promptVersion}::${note}`).digest("hex");
 }
 
