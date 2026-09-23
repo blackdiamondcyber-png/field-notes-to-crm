@@ -6,6 +6,8 @@ I am a dental equipment sales rep and I dictate my visit notes on my phone betwe
 
 A 2 minute 44 second walkthrough of the dataset, the results and the regression the harness caught is on YouTube: [building the eval before shipping the prompt](https://www.youtube.com/watch?v=46dHjUNHqIU).
 
+In short: the harness caught a bug in its own metric first, which had been scoring an empty product list against an empty label as wrong and cost both prompts 30 points. Then it caught the prompt I expected to be better getting worse on one field. v2's written rules took contacts F1 from 63.3% to 99.7% and cut hallucinations from 19.3% of notes to 12.0%, but dropped activity-type accuracy from 94.0% to 85.3%; eight of the fifteen notes it newly got wrong were emails that mention a quote. Neither version ships as is.
+
 ## The table
 
 The target shape is the real table in my CRM:
