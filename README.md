@@ -4,7 +4,7 @@
 
 I am a dental equipment sales rep and I dictate my visit notes on my phone between stops. They come out messy: filler words, typos, relative dates like "next Tues" or "end of month," sometimes two offices in one note, sometimes just a phone tag with nobody home. I built the CRM I use myself, and the piece I kept getting wrong by hand was turning that messy dictation into a clean activity row. This project is that extraction step, plus an eval harness so I can change the prompt and actually measure whether it got better instead of guessing.
 
-A two and a half minute walkthrough of the dataset, the results and the regression the harness caught is on YouTube: [building the eval before shipping the prompt](https://www.youtube.com/watch?v=46dHjUNHqIU).
+A 2 minute 44 second walkthrough of the dataset, the results and the regression the harness caught is on YouTube: [building the eval before shipping the prompt](https://www.youtube.com/watch?v=46dHjUNHqIU).
 
 ## The table
 
